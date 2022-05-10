@@ -3,3 +3,7 @@ variable "vpcname" {
   default = "myvpc"
 
 }
+variable "sshport" {
+    type = number
+    default = 22  
+}
