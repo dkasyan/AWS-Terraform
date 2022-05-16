@@ -1,19 +1,19 @@
 provider "aws" {
     region = "eu-west-1"
 }
-
-resource "aws_vpc" "myvpc" {
-    cidr_block = "10.0.0.0/16"
-    tags = {
-        name = "TerraformVPC"
-    }
-  
-}
-
 resource "aws_instance" "ec2" {
     ami = "ami-00c90dbdc12232b58"
     instance_type = "t2.micro"
 }
+resource "aws_eip" "elasticeip" {
+    instance = aws_instance.ec2.id
+    
+}
+output "EIP" {
+    value = aws_eip.elasticeip.public_ip
+  
+}
+
 #output "vpcid" {
 #    value = aws_vpc.myvpc.myvpc.id
      
