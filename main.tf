@@ -10,14 +10,27 @@ resource "aws_eip" "elasticeip" {
     instance = aws_instance.ec2.id
     
 }
+
+variable "ingressrules" {
+    type = list(number)
+    default = [ 80,443 ]
+  
+}
+variable "iegressrules" {
+    type = list(number)
+    default = [ 80,443,25, 3306, 22 ]
+}
 resource "aws_security_group" "webtraffic" {
     name = "Allow HTTPS"
-    ingress {
-        from_port = 443
-        to_port = 443
+    dynamic "ingress" {
+        iterator = port
+        for_each = var.ingressrules
+        content {
+        from_port = port.value
+        to_port = port.value
         protocol = "TCP"
         cidr_blocks = ["0.0.0.0/0"]
-
+        }
 
     }
     egress {
