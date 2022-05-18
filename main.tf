@@ -1,3 +1,6 @@
+provider "aws" {
+    region = "eu-west-1"
+}
 resource "aws_instance" "db" {
     ami = "ami-00c90dbdc12232b58"
     instance_type = "t2.micro"
@@ -10,6 +13,7 @@ resource "aws_instance" "web" {
     ami = "ami-00c90dbdc12232b58"
     instance_type = "t2.micro"
     security_groups =  [aws_security_group.web_traffic.name]
+    user_data = file("server-script.sh")
     tags = {
         Name = "Web Server"
     }
@@ -54,4 +58,16 @@ resource "aws_security_group" "web_traffic" {
         cidr_blocks = ["0.0.0.0/0"]
     }
     }
+}
+
+
+
+output "PrivateIP" {
+    value = aws_instance.db.private_ip
+  
+}
+
+output "PublicIP" {
+    value = aws_eip.web_ip.public_ip
+  
 }
