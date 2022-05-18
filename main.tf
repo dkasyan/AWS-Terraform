@@ -9,6 +9,7 @@ resource "aws_instance" "db" {
 resource "aws_instance" "web" {
     ami = "ami-00c90dbdc12232b58"
     instance_type = "t2.micro"
+    security_groups =  [aws_security_group.web_traffic.name]
     tags = {
         Name = "Web Server"
     }
