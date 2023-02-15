@@ -1,73 +1,38 @@
+terraform {
+  # Run init/plan/apply with "backend" commented-out (ueses local backend) to provision Resources (Bucket, Table)
+  # Then uncomment "backend" and run init, apply after Resources have been created (uses AWS)
+  backend "s3" {
+    bucket         = "cc-tf-state-backend-ci-cd"
+    key            = "tf-infra/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-state-locking"
+    encrypt        = true
+  }
+
+  required_version = ">=0.13.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~>3.0"
+    }
+  }
+}
+
 provider "aws" {
-    region = "eu-west-1"
-}
-resource "aws_instance" "db" {
-    ami = "ami-00c90dbdc12232b58"
-    instance_type = "t2.micro"
-#   Use tags with the sign equal " = "
-    tags = {
-        Name = "DB Server"
-    }
-}
-resource "aws_instance" "web" {
-    ami = "ami-00c90dbdc12232b58"
-    instance_type = "t2.micro"
-    security_groups =  [aws_security_group.web_traffic.name]
-    user_data = file("server-script.sh")
-    tags = {
-        Name = "Web Server"
-    }
+  region = "us-east-1"
 }
 
-# Show EIP of web server
-resource "aws_eip" "web_ip" {
-    instance = aws_instance.web.id
-  
+module "tf-state" {
+  source      = "./modules/tf-state"
+  bucket_name = "cc-tf-state-backend-ci-cd"
 }
 
-variable "ingress" {
-  type = list(number)
-  default = [ 80,443 ]
-}
+module "vpc-infra" {
+  source = "./modules/vpc"
 
-variable "egress" {
-  type = list(number)
-  default = [ 80,443 ]
-}
-
-resource "aws_security_group" "web_traffic" {
-    name = "Allow Web Traffic"
-#   Dynamic block for each port 
-    dynamic "ingress" {
-        iterator = port
-        for_each = var.ingress
-        content {
-            from_port = port.value
-            to_port = port.value
-            protocol = "TCP"
-            cidr_blocks = ["0.0.0.0/0"]
-        }
-    }
-    dynamic "egress" {
-    iterator = port
-    for_each = var.egress
-    content {
-        from_port = port.value
-        to_port = port.value
-        protocol = "TCP"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-    }
-}
-
-
-
-output "PrivateIP" {
-    value = aws_instance.db.private_ip
-  
-}
-
-output "PublicIP" {
-    value = aws_eip.web_ip.public_ip
-  
+  # VPC Input Vars
+  vpc_cidr             = local.vpc_cidr
+  availability_zones   = local.availability_zones
+  public_subnet_cidrs  = local.public_subnet_cidrs
+  private_subnet_cidrs = local.private_subnet_cidrs
 }
