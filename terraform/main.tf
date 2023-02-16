@@ -4,7 +4,7 @@ terraform {
   backend "s3" {
     bucket         = "cc-tf-state-backend-ci-cd"
     key            = "tf-infra/terraform.tfstate"
-    region         = "eu-west-1"
+    region         = "us-east-1"
     dynamodb_table = "terraform-state-locking"
     encrypt        = true
   }
@@ -19,7 +19,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-west-1"
+  region = "us-east-1"
 }
 
 module "tf-state" {
