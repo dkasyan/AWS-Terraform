@@ -1,148 +1,134 @@
-#Creating VPC Network
-
-resource "aws_vpc" "main_VPC" {
-  cidr_block       = "10.0.0.0/16"
+resource "aws_vpc" "ccVPC" {
+  cidr_block       = var.vpc_cidr
   instance_tenancy = "default"
-
   tags = {
-    Name = var.cloud_name
+    Name    = "ccVPC"
+    Project = "CC TF Demo"
   }
 }
 
-
-#Creating Subnets
-
-resource "aws_subnet" "PUB_A" {
-  vpc_id     = aws_vpc.main_VPC.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "eu-west-1a"
-
+resource "aws_internet_gateway" "ccIGW" {
+  vpc_id = aws_vpc.ccVPC.id
   tags = {
-    Name = "${var.cloud_name}_PUB_A"
-}
-}
-
-resource "aws_subnet" "PUB_B" {
-  vpc_id     = aws_vpc.main_VPC.id
-  cidr_block = "10.0.2.0/24"
-  availability_zone = "eu-west-1b"
-
-  tags = {
-    Name = "${var.cloud_name}_PUB_B"
-}
-}
-
-resource "aws_subnet" "PUB_C" {
-  vpc_id     = aws_vpc.main_VPC.id
-  cidr_block = "10.0.3.0/24"
-  availability_zone = "eu-west-1c"
-
-  tags = {
-    Name = "${var.cloud_name}_PUB_C"
-}
-}
-
-resource "aws_subnet" "DMZ_A" {
-  vpc_id     = aws_vpc.main_VPC.id
-  cidr_block = "10.0.4.0/24"
-  availability_zone = "eu-west-1a"
-
-  tags = {
-    Name = "${var.cloud_name}_DMZ_A"
-}
-}
-
-resource "aws_subnet" "DMZ_B" {
-  vpc_id     = aws_vpc.main_VPC.id
-  cidr_block = "10.0.5.0/24"
-  availability_zone = "eu-west-1b"
-
-  tags = {
-    Name = "${var.cloud_name}_DMZ_B"
-}
-}
-
-resource "aws_subnet" "DMZ_C" {
-  vpc_id     = aws_vpc.main_VPC.id
-  cidr_block = "10.0.6.0/24"
-  availability_zone = "eu-west-1c"
-
-  tags = {
-    Name = "${var.cloud_name}_DMZ_C"
-}
-}
-
-#Create Internet Gateway
-
-resource "aws_internet_gateway" "GW" {
-  vpc_id = aws_vpc.main_VPC.id
-
-  tags = {
-    Name = "${var.cloud_name}_IGW"
+    Name    = "ccIGW"
+    Project = "CC TF Demo"
   }
 }
 
-#Create Routing
-
-resource "aws_route_table" "ROUTE_TABLE" {
-    vpc_id = aws_vpc.main_VPC.id
-    route {
-        cidr_block = "0.0.0.0/0"
-        gateway_id = aws_internet_gateway.GW.id
-    }
-
-    tags = {
-        Name = "${var.cloud_name}_ROUTE_TABLE"
-    }
+resource "aws_eip" "ccNatGatewayEIP1" {
+  tags = {
+    Name    = "ccNatGatewayEIP1"
+    Project = "CC TF Demo"
+  }
+}
+resource "aws_nat_gateway" "ccNatGateway1" {
+  allocation_id = aws_eip.ccNatGatewayEIP1.id
+  subnet_id     = aws_subnet.ccPublicSubnet1.id
+  tags = {
+    Name    = "ccNatGateway1"
+    Project = "CC TF Demo"
+  }
+}
+resource "aws_subnet" "ccPublicSubnet1" {
+  vpc_id            = aws_vpc.ccVPC.id
+  cidr_block        = var.public_subnet_cidrs[0]
+  availability_zone = var.availability_zones[0]
+  tags = {
+    Name    = "ccPublicSubnet1"
+    Project = "CC TF Demo"
+  }
 }
 
-# Association Routing
-resource "aws_route_table_association" "ASS_ROUTE_TABLE_PUB_A" {
-    subnet_id = aws_subnet.PUB_A.id
-    route_table_id = aws_route_table.ROUTE_TABLE.id
+resource "aws_eip" "ccNatGatewayEIP2" {
+  tags = {
+    Name    = "ccNatGatewayEIP2"
+    Project = "CC TF Demo"
+  }
+}
+resource "aws_nat_gateway" "ccNatGateway2" {
+  allocation_id = aws_eip.ccNatGatewayEIP2.id
+  subnet_id     = aws_subnet.ccPublicSubnet1.id
+  tags = {
+    Name    = "ccNatGateway2"
+    Project = "CC TF Demo"
+  }
+}
+resource "aws_subnet" "ccPublicSubnet2" {
+  vpc_id            = aws_vpc.ccVPC.id
+  cidr_block        = var.public_subnet_cidrs[1]
+  availability_zone = var.availability_zones[1]
+  tags = {
+    Name    = "ccPublicSubnet2"
+    Project = "CC TF Demo"
+  }
 }
 
-resource "aws_route_table_association" "ASS_ROUTE_TABLE_PUB_B" {
-    subnet_id = aws_subnet.PUB_B.id
-    route_table_id = aws_route_table.ROUTE_TABLE.id
+resource "aws_subnet" "ccPrivateSubnet1" {
+  vpc_id            = aws_vpc.ccVPC.id
+  cidr_block        = var.private_subnet_cidrs[0]
+  availability_zone = var.availability_zones[0]
+  tags = {
+    Name    = "ccPrivateSubnet1"
+    Project = "CC TF Demo"
+  }
+}
+resource "aws_subnet" "ccPrivateSubnet2" {
+  vpc_id            = aws_vpc.ccVPC.id
+  cidr_block        = var.private_subnet_cidrs[1]
+  availability_zone = var.availability_zones[1]
+  tags = {
+    Name    = "ccPrivateSubnet2"
+    Project = "CC TF Demo"
+  }
 }
 
-resource "aws_route_table_association" "ASS_ROUTE_TABLE_PUB_C" {
-    subnet_id = aws_subnet.PUB_C.id
-    route_table_id = aws_route_table.ROUTE_TABLE.id
+resource "aws_route_table" "ccPublicRT" {
+  vpc_id = aws_vpc.ccVPC.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.ccIGW.id
+  }
+  tags = {
+    Name    = "ccPublicRT"
+    Project = "CC TF Demo"
+  }
+}
+resource "aws_route_table" "ccPrivateRT1" {
+  vpc_id = aws_vpc.ccVPC.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.ccNatGateway1.id
+  }
+  tags = {
+    Name    = "ccPrivateRT1"
+    Project = "CC TF Demo"
+  }
+}
+resource "aws_route_table" "ccPrivateRT2" {
+  vpc_id = aws_vpc.ccVPC.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.ccNatGateway2.id
+  }
+  tags = {
+    Name    = "ccPrivateRT2"
+    Project = "CC TF Demo"
+  }
 }
 
-#Security group
-resource "aws_security_group" "web_traffic" {
-    vpc_id     = aws_vpc.main_VPC.id
-    dynamic "ingress" {
-        iterator = port
-        for_each = var.ingress
-        content {
-          from_port = port.value
-          to_port = port.value
-          protocol = "TCP"
-          cidr_blocks = ["0.0.0.0/0"]
-        }      
-    }
-
-    dynamic "egress" {
-        iterator = port
-        for_each = var.egress
-        content {
-          from_port = port.value
-          to_port = port.value
-          protocol = "TCP"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-    }
-    tags = {
-      Name = "${var.cloud_name}_SECGROUP"
-    }
-  
+resource "aws_route_table_association" "ccPublicRTassociation1" {
+  subnet_id      = aws_subnet.ccPublicSubnet1.id
+  route_table_id = aws_route_table.ccPublicRT.id
 }
-
-# Show EIP of web server
-resource "aws_eip" "web_ip" {
-    instance = aws_instance.web.id
+resource "aws_route_table_association" "ccPublicRTassociation2" {
+  subnet_id      = aws_subnet.ccPublicSubnet2.id
+  route_table_id = aws_route_table.ccPublicRT.id
+}
+resource "aws_route_table_association" "ccPrivateRTassociation1" {
+  subnet_id      = aws_subnet.ccPrivateSubnet1.id
+  route_table_id = aws_route_table.ccPrivateRT1.id
+}
+resource "aws_route_table_association" "ccPrivateRTassociation2" {
+  subnet_id      = aws_subnet.ccPrivateSubnet2.id
+  route_table_id = aws_route_table.ccPrivateRT2.id
 }
