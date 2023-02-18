@@ -11,3 +11,12 @@ The templates in this repository are written in AWS CloudFormation, a service th
 The configuration files in this repository are written in Terraform, a tool for building, changing, and versioning infrastructure. They provide a clear and concise way to define and manage the resources in your infrastructure, making it easy to track changes over time and collaborate with others.
 
 Overall, this repository serves as a foundation for building and managing AWS infrastructure in a robust and efficient manner. Whether you're just getting started with AWS or you're an experienced user looking for a flexible and scalable infrastructure solution, this repository has everything you need to get started.
+
+## Commands
+terraform init
+terraform validate
+terraform apply
+terraform destroy
+terraform plan
+apply 
+
